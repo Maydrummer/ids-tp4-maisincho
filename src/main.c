@@ -19,7 +19,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 SPDX-License-Identifier: MIT
 *************************************************************************************************/
 
-/** @file main.c
+/** @file
  ** @brief Definición de la función principal del programa
  **/
 
@@ -29,8 +29,10 @@ SPDX-License-Identifier: MIT
 #include "gpio.h"
 
 /* === Macros definitions ====================================================================== */
-#define LED_ROJO_PORT 3
-#define LED_ROJO_BIT  4
+#define GPIO_A 1
+#define GPIO_B 2
+#define PIN_3  3
+#define PIN_5  5
 
 /* === Private data type declarations ========================================================== */
 
@@ -43,13 +45,24 @@ SPDX-License-Identifier: MIT
 /* === Private variable definitions ============================================================ */
 
 /* === Private function implementation ========================================================= */
-
+void Delay(void) {
+}
 /* === Public function implementation ========================================================== */
 
 int main(void) {
-    gpio_t led_rojo = gpioCreate(LED_ROJO_PORT, LED_ROJO_BIT);
-    gpioSetDirection(led_rojo, true);
-    gpioSetState(led_rojo, true);
+    gpio_t led_rojo;
+    gpio_t led_verde;
+
+    led_rojo = GpioCreate(GPIO_A, PIN_3);
+    led_verde = GpioCreate(GPIO_B, PIN_5);
+
+    GpioSetDirection(led_rojo, true);
+    GpioSetState(led_rojo, true);
+    while (1) {
+        GpioSetState(led_rojo, false);
+        Delay();
+        GpioSetState(led_rojo, true);
+    }
 
     return 0;
 }

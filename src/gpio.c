@@ -4,58 +4,80 @@
 #ifndef GPIO_MAX_INSTANCES
 #define GPIO_MAX_INSTANCES 10
 #endif
-
-struct gpio_s {
-    uint8_t port;
-    uint8_t bit;
-    bool output;
-    bool used;
+//! Estructura con los atributos de un puerto digital
+struct gpio_h {
+    uint8_t port; //!< Numero de puerto GPIO
+    uint8_t pin;  //!< Pin del puerto GPIO
+    bool state;   //!< Estado actual del puerto digital
+    bool output;  //!< El puerto es configurado como salida
+#ifdef USE_STATIC_MEM
+    bool used; //!< El descriptor del puerto está ocupado
+#endif
 };
 
-/**
- * @brief
- *
- * @return gpio_t
- */
-static gpio_t allocateInstance() {
-    static struct gpio_s instances[GPIO_MAX_INSTANCES] = {0};
+/* === Private variable declarations =========================================================== */
 
-    gpio_t result = NULL;
-    for (int index = 0; index < GPIO_MAX_INSTANCES; index++) {
-        if (!instances[index].used) {
-            result = &instances[index].used;
-            result->used = true;
+/* === Private function declarations =========================================================== */
+
+/* === Public variable definitions ============================================================= */
+
+/* === Private variable definitions ============================================================ */
+
+static gpio_t GpioAllocate(void);
+
+/* === Private function implementation ========================================================= */
+
+#ifdef USE_STATIC_MEM
+static gpio_t GpioAllocate(void) {
+    static struct gpio_h Instances[MAX_GPIO_INSTANCES] = {0};
+
+    gpio_t self = NULL;
+    for (int Index = 0; Index < MAX_GPIO_INSTANCES; Index++) {
+        if (!Instances[Index].used) {
+            self = &Instances[Index];
+            self->used = true;
             break;
         }
     }
-    return result;
+    return self;
 }
+#endif
 
-gpio_t gpioCreate(uint8_t puerto, uint8_t bit) {
-#ifdef USE_DYNAMIC_MEM
-    gpio_t self = malloc(sizeof(struct gpio_s));
+/* === Public function implementation ========================================================== */
+
+gpio_t GpioCreate(uint8_t port, uint8_t bit) {
+    gpio_t self;
+#ifdef USE_STATIC_MEM
+    self = GpioAllocate();
 #else
-    gpio_t self = allocateInstance();
+    self = malloc(sizeof(struct gpio_h));
 #endif
     if (self) {
-        self->port = puerto;
-        self->bit = bit;
+        self->port = port;
+        self->pin = bit;
         self->output = false;
+        self->state = false;
     }
+
     return self;
 }
 
-void gpioSetOutput(gpio_t self, bool output) {
+void GpioSetDirection(gpio_t self, bool output) {
     self->output = output;
-    HAL_GPIO_SET_OUTPUT(self->port, self->bit);
 }
 
-void gpioSetState(gpio_t self, bool state) {
+bool GpioGetDirection(gpio_t self) {
+    return self->output;
+}
+
+void GpioSetState(gpio_t self, bool state) {
     if (self->output) {
-        HAL_GPIO_SET_STATE(self->port, self->bit);
+        self->state = state;
     }
 }
 
-bool gpioGetState(gpio_t self) {
-    return HAL_GPIO_GET_STATE(self->port, self->bit);
+bool GpioGetState(gpio_t self) {
+    return self->state;
 }
+
+/* === End of documentation ==================================================================== */
